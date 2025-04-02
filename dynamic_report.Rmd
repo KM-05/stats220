@@ -1,0 +1,171 @@
+---
+title: My dynamic report
+output: html_fragment
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, error=FALSE)
+
+#Load Package
+library(tidyverse)
+```
+
+```{css}
+body {
+  background-color: #f5edeb;
+  font-family: "Lucida Console", "Courier New", monospace;
+}
+
+h1 {
+  color: #002ea3;
+  text-align: center;
+  Font-weight: bold;
+  text-decoration: underline;
+  font-family: "Lucida Console", "Courier New", monospace;
+}
+
+h2{
+  color: #450101;
+  Font-weight: bold;
+  text-decoration: underline;
+  font-family: Tahoma;
+}
+
+p{
+  font-size: 15px;
+  font-family: "Calibri", san-serif;
+  text-align: justify;
+}
+
+img {
+  border: 5px solid #002ea3;
+  text-align: center;
+}
+```
+
+## Social Media Observation Survey
+
+This survey aims to understand user's preferences and habits in terms of their social media usage. It gathers insights on the amount of time spent, the frequency of engagement, type of contents, and the number of platforms used.The responses will provide valuable numeric data to analyze patterns in social media behavior.
+
+
+```{r}
+#Data
+#Links URL to csv_url
+csv_url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vR4wUaZfaDbYKBrzm6VfgUOYMidLyUr5jFUBMR0jv56GSLvkIaIUKZV32_FbjB_bC4O6yR-0E9M7Oha/pub?gid=1636861692&single=true&output=csv"
+
+#Read csv file
+logged_data <- read_csv(csv_url)
+
+#Update Data
+latest_data <- logged_data %>%
+  select(-1) %>%            #Removes First Section (Unnecessary)
+  rename(                         
+    has_account = 1,              #
+    engagement_time = 2,          #
+    type_of_content = 3,          #Rename columns in a dataframe
+    favourite_app = 4,            #
+    amount_of_active_apps = 5     #
+  )                               
+
+```
+
+
+```{r}
+#Get average engagement time
+average_engagement_time <- latest_data$engagement_time %>% 
+  mean(na.rm = TRUE) %>%
+  round(1)
+
+#Get max, min, and mode of amount of active platforms
+max_active_apps <- latest_data$amount_of_active_apps %>% max() #Find max in amount_of_active_apps column
+min_active_apps <- latest_data$amount_of_active_apps %>% min() #Find min in amount_of_active_apps column
+
+mode_active_apps <- latest_data$amount_of_active_apps %>%    
+  table() %>%                 #Creates a frequency table
+  which.max() %>%             #Finds index of the max value in the frequency table
+  names()                     #Retrieves the name
+
+
+#Graph 1
+graph_active_platforms <- latest_data %>%                           #Get Data from latest_data
+  ggplot() +                                                        #Create plot
+  geom_bar(aes(x = amount_of_active_apps), fill = "lightblue") +    #Features of graph
+  scale_x_continuous(breaks = 1:8) +                                #Scale for x axis (1~8)
+  labs(                                                             #
+    title = "Distribution of Active Apps",                          #Add Labels (title, x, y, caption)
+    x = "Number of Active Apps",                                    #
+    y = "Number of Votes",                                          #
+    caption = "Displays the number of active apps used by respondents") +
+  theme_minimal() +                                                 #Minimalist theme, no background annotations
+  theme(axis.text.x = element_text(angle = 45))                     #Angle labels on x axis
+
+
+#Graph 2
+graph_engagement_time <- latest_data %>%                            #Get Data from latest_data
+  ggplot() +                                                        #Create plot
+  geom_bar(aes(x = engagement_time), fill = "lightblue") +          #Features of graph
+  scale_x_continuous(breaks = 1:8) +                                #Scale for x axis (1~8)
+  labs(                                                             #
+    title = "Distribution of Engagement Time per Day",              #Add Labels (title, x, y, caption)
+    x = "Engagment Time (hours)",                                   #
+    y = "Number of Votes",                                          #
+    caption = "Displays the daily engagement time across respondents") +                
+  theme_minimal() +                                                 #Minimalist theme, no background annotations
+  theme(axis.text.x = element_text(angle = 45))                     #Angle labels on x axis
+
+
+#Graph 3
+graph_content_has_account <- latest_data %>%                                    #Get Data from latest_data
+  ggplot() +                                                                    #Create plot
+  geom_bar(aes(x = type_of_content, fill = has_account), position = "dodge") +  #Features of graph
+  labs(                                                                         #
+    title = "Comparison of Account Ownership and Content Type",                 #Add Labels (title, x, y, fill, caption)
+    x = "Type of Content",                                                      #
+    y = "Number of Votes",                                                      #
+    fill = "Has Account",                                                       #
+    caption = "Compares account ownership and content types") +                 #
+  theme_minimal() +                                         #Minimalist theme, no background annotations
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  #Angle labels on x axis, hjust = 1 to right align text
+
+```
+
+## Results
+
+### Summary Values
+
+Here are some interesting results retrieved from the survey:
+
+- The highest number of social media platforms that a user actively engages with is _**`r max_active_apps`**_ platforms.
+- The Lowest number of social media platforms that a user actively engages with is _**`r min_active_apps`**_ platforms.
+- Most people have _**`r mode_active_apps`**_ active social media platforms.
+
+
+
+### Graph 1
+```{r, echo=FALSE}
+print(graph_active_platforms)
+```
+
+The graph above illustrates the distribution of the number of social media platforms used by individuals. From the data presented, it shows that the majority of users actively engage with approximately **3 to 4** different social media platforms. This trend suggests that most individuals maintain a presence on multiple platforms, likely to diversify and consume different types of content. 
+
+### Graph 2
+```{r, echo=FALSE}
+print(graph_engagement_time)
+```
+
+The graph above represents the approximate engagement time on social media platforms. Based on the data, the majority of respondents spend around 4 hours actively engaging with social media per day. This suggests a significant level of daily social media usage, potentially reflecting the prolonged content consumption. This trend may  highlight the impact of short form content (reels, shorts, etc) and the algorithm driven content recommendations, which encourage extended usage through personalized feeds and interactive features.
+
+### Graph 3
+```{r, echo=FALSE}
+print(graph_content_has_account)
+```
+
+The graph above shows the type of content the respondents see the most and if there is an relation to if they have an social media account. We can see that out of the respondents who do not have a social media account, there are only 3 types of content they see.
+
+Out of **5 votes stating that the respondents do not have an account**, the type of contents voted were:
+
+- Education (1 Vote)
+- Entertainment/News (3 Votes)
+- Fitness/Health (1 Vote)
+
+This shows that, although the dataset is small, there may be a correlation between content type and account holding. This may be due to the fact that some people may just want to see the education, entertainment/news, or health without creating an account. 
